@@ -1,6 +1,7 @@
 import numpy as np
 import pathlib
 import torch
+from torchvision.transforms import Resize, InterpolationMode
 import matplotlib.pyplot as plt
 
 from nonodepth.datasets.diode import Diode
@@ -28,7 +29,13 @@ def view_triplet(sample: tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> Non
 
 if __name__ == '__main__':
     path = pathlib.Path('C:\\Users\\patri\\datasets\\val')
-    diode = Diode(root=path, shuffle=True)
+
+    transform = Resize(
+        (384, 384), interpolation=InterpolationMode.BILINEAR, antialias=True)
+    target_transform = Resize(
+        (384, 384), interpolation=InterpolationMode.BILINEAR, antialias=True)
+    diode = Diode(root=path, transform=transform,
+                  target_transform=target_transform)
 
     print(f'Available samples={len(diode)}')
 
