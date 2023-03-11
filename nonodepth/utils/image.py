@@ -60,6 +60,21 @@ def gradients(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     return dx, dy
 
 
+def gradient_loss(pred: torch.Tensor, target: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Compute the gradient loss, i.e. the L1 loss for the gradient images.
+    """
+    dx_pred, dy_pred = gradients(pred)
+    dx_target, dy_target = gradients(target)
+
+    diff_x = torch.abs(dx_target - dx_pred)
+    diff_y = torch.abs(dy_target - dy_pred)
+
+    score = torch.mean(diff_x + diff_y)
+
+    return score, diff_x, diff_y
+
+
 class SSIM(nn.Module):
     """
     Layer to compute the SSIM image from a pair of images. Inspired from: Monodepth2.

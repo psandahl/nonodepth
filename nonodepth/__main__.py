@@ -5,7 +5,7 @@ from torchvision.transforms import Resize, InterpolationMode
 import matplotlib.pyplot as plt
 
 from nonodepth.datasets.diode import Diode
-from nonodepth.utils.image import gradients, tensor_to_np_image, SSIM
+from nonodepth.utils.image import gradients, gradient_loss, tensor_to_np_image, SSIM
 
 
 def view_triplet(sample: tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> None:
@@ -25,8 +25,6 @@ def view_triplet(sample: tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> Non
     plt.subplot(1, 3, 3)
     plt.imshow(tensor_to_np_image(mask), cmap='gray')
     plt.title('Depth Mask')
-
-    # plt.show()
 
 
 def view_ssim(x: torch.Tensor, y: torch.Tensor) -> None:
@@ -53,8 +51,6 @@ def view_ssim(x: torch.Tensor, y: torch.Tensor) -> None:
     ssim_loss = ssim.loss(x, y)
     plt.suptitle(f'SSIM loss={ssim_loss}')
 
-    # plt.show()
-
 
 def view_gradients(x: torch.Tensor) -> None:
     plt.figure(figsize=(9, 9))
@@ -78,7 +74,37 @@ def view_gradients(x: torch.Tensor) -> None:
     plt.imshow(dy, vmin=np.min(dy), vmax=np.max(dy), cmap='gray')
     plt.title('dy')
 
-    # plt.show()
+
+def view_gradient_loss(x: torch.Tensor) -> None:
+    plt.figure(figsize=(9, 9))
+
+    xx = x.expand((1,) + x.shape)
+    yy = xx.clone()
+    yy[:, :, 150, :] = torch.max(xx)
+
+    plt.subplot(1, 4, 1)
+    plt.imshow(tensor_to_np_image(x), cmap='gray',
+               vmin=torch.min(x), vmax=torch.max(x))
+    plt.title('target')
+
+    plt.subplot(1, 4, 2)
+    plt.imshow(tensor_to_np_image(yy[0]), cmap='gray',
+               vmin=torch.min(yy[0]), vmax=torch.max(yy[0]))
+    plt.title('pred')
+
+    loss, diff_x, diff_y = gradient_loss(yy, xx)
+
+    plt.suptitle(f'Gradient loss={loss.item()}')
+
+    plt.subplot(1, 4, 3)
+    plt.imshow(tensor_to_np_image(diff_x[0]), cmap='gray',
+               vmin=torch.min(diff_x[0]), vmax=torch.max(diff_x[0]))
+    plt.title('diff x')
+
+    plt.subplot(1, 4, 4)
+    plt.imshow(tensor_to_np_image(diff_y[0]), cmap='gray',
+               vmin=torch.min(diff_y[0]), vmax=torch.max(diff_y[0]))
+    plt.title('diff y')
 
 
 if __name__ == '__main__':
@@ -99,5 +125,6 @@ if __name__ == '__main__':
     view_ssim(triplet[1], triplet[1])
     view_ssim(triplet[1], triplet[2])
     view_gradients(triplet[1])
+    view_gradient_loss(triplet[1])
 
     plt.show()
