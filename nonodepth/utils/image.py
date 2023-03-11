@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 def tensor_to_np_image(img: torch.Tensor) -> np.ndarray:
@@ -36,6 +37,27 @@ def np_to_tensor_image(img: np.ndarray) -> torch.Tensor:
         return torch.from_numpy(img)
     else:
         return None
+
+
+def gradients(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Compute gradients in x and y directions for the given tensor.
+
+    Parameters:
+        x: Input tensor. Must have dimensions (n c h w)
+
+    Returns:
+        dx, dy
+    """
+    right = F.pad(x, (0, 1, 0, 0))[:, :, :, 1:]
+    bottom = F.pad(x, (0, 0, 0, 1))[:, :, 1:, :]
+
+    dx, dy = right - x, bottom - x
+
+    dx[:, :, :, -1] = 0
+    dy[:, :, -1, :] = 0
+
+    return dx, dy
 
 
 class SSIM(nn.Module):
