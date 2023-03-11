@@ -74,7 +74,7 @@ class SSIM(nn.Module):
         # return torch.clamp((1 - SSIM_n / SSIM_d) / 2, 0, 1)
         return SSIM_n / SSIM_d
 
-    def score(self: SSIM, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def loss(self: SSIM, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
         Compute an inverse SSIM score, where zero is perfect match and one
         is negative match.

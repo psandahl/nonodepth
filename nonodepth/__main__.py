@@ -49,9 +49,9 @@ def view_ssim(x: torch.Tensor, y: torch.Tensor) -> None:
 
     plt.show()
 
-    ssim_score = ssim.score(x, y)
+    ssim_loss = ssim.loss(x, y)
 
-    print(f'ssim_score={ssim_score.item()}')
+    print(f'ssim_loss={ssim_loss.item()}')
 
 
 if __name__ == '__main__':
