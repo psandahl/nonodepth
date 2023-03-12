@@ -17,14 +17,16 @@ class ConvolutionBlock(nn.Module):
                       out_channels=out_channels,
                       kernel_size=3,
                       stride=1,
-                      padding='same'),
+                      padding='same',
+                      bias=False),
             nn.BatchNorm2d(num_features=out_channels),
             nn.LeakyReLU(inplace=True),
             nn.Conv2d(in_channels=out_channels,
                       out_channels=out_channels,
                       kernel_size=3,
                       stride=1,
-                      padding='same'),
+                      padding='same',
+                      bias=False),
             nn.BatchNorm2d(num_features=out_channels),
             nn.LeakyReLU(inplace=True)
         )

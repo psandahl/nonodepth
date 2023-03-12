@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from nonodepth.datasets.diode import Diode
 from nonodepth.networks.basicunet import BasicUNet
 from nonodepth.utils.image import gradients, gradient_loss, tensor_to_np_image, SSIM
+from nonodepth.utils.model import total_parameters, trainable_parameters, print_trainable_parameters
 
 
 def view_triplet(sample: tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> None:
@@ -132,15 +133,11 @@ def basic_visualization(path: pathlib.Path) -> None:
 def model_eval() -> None:
     model = BasicUNet(in_channels=3)
 
-    total_parameters = sum(p.numel() for p in model.parameters())
-    trainable_parameters = sum(p.numel()
-                               for p in model.parameters() if p.requires_grad)
-
-    print(
-        f'Total parameters={total_parameters}, trainable parameters={trainable_parameters}')
+    print(f'Total number of parameters={total_parameters(model)}')
+    print(f'Trainable number of parameters={trainable_parameters(model)}')
+    print_trainable_parameters(model)
 
     t = torch.rand((3, 3, 384, 384), dtype=torch.float32)
-
     tt = model(t)
 
     print(tt.shape)
