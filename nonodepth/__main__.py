@@ -5,6 +5,7 @@ from torchvision.transforms import Resize, InterpolationMode
 import matplotlib.pyplot as plt
 
 from nonodepth.datasets.diode import Diode
+from nonodepth.networks.basicunet import BasicUNet
 from nonodepth.utils.image import gradients, gradient_loss, tensor_to_np_image, SSIM
 
 
@@ -107,9 +108,7 @@ def view_gradient_loss(x: torch.Tensor) -> None:
     plt.title('diff y')
 
 
-if __name__ == '__main__':
-    path = pathlib.Path('C:\\Users\\patri\\datasets\\val')
-
+def basic_visualization(path: pathlib.Path) -> None:
     transform = Resize(
         (384, 384), interpolation=InterpolationMode.BILINEAR, antialias=True)
     target_transform = Resize(
@@ -128,3 +127,27 @@ if __name__ == '__main__':
     view_gradient_loss(triplet[1])
 
     plt.show()
+
+
+def model_eval() -> None:
+    model = BasicUNet(in_channels=3)
+
+    total_parameters = sum(p.numel() for p in model.parameters())
+    trainable_parameters = sum(p.numel()
+                               for p in model.parameters() if p.requires_grad)
+
+    print(
+        f'Total parameters={total_parameters}, trainable parameters={trainable_parameters}')
+
+    t = torch.rand((3, 3, 384, 384), dtype=torch.float32)
+
+    tt = model(t)
+
+    print(tt.shape)
+
+
+if __name__ == '__main__':
+    # path = pathlib.Path('C:\\Users\\patri\\datasets\\val')
+    # basic_visualization(path)
+
+    model_eval()
