@@ -9,7 +9,8 @@ from nonodepth.utils.image import SSIM, gradient_loss
 from nonodepth.utils.model import trainable_parameters
 
 
-def fit(model: nn.Module,
+def fit(device: torch.device,
+        model: nn.Module,
         training_loader: DataLoader,
         validation_loader: DataLoader,
         epochs: int,
@@ -17,6 +18,7 @@ def fit(model: nn.Module,
 
     # Print parameter information.
     print(f'Parameters for training')
+    print(f'- Device={device}')
     print(f'- Training batches={len(training_loader)}')
     print(f'- Validation batches={len(validation_loader)}')
     print(f'- Epochs={epochs}')
@@ -25,8 +27,7 @@ def fit(model: nn.Module,
 
     # Setup optimizer.
     optimizer = optim.Adam(model.parameters(),
-                           lr=learning_rate,
-                           amsgrad=False)
+                           lr=learning_rate)
 
     # Setup loss function.
     ssim = SSIM()
@@ -44,12 +45,14 @@ def fit(model: nn.Module,
 
         return ssim_loss * ssim_loss_weight + grad_loss * grad_loss_weight
 
-    # Run training loop.
+    # Run training/validation loop.
     for epoch in range(epochs):
-        print(f'Epoch={epoch + 1} of {epochs}', end=':', flush=True)
-        batches = 0
-        running_loss = 0.
-        for batch, (images, targets, _masks) in enumerate(training_loader):
+        print(f'Epoch={epoch + 1}/{epochs}', end=': ', flush=True)
+
+        training_batches = 0
+        training_loss = 0.
+        for images, targets, _masks in training_loader:
+            images, targets = images.to(device), targets.to(device)
 
             optimizer.zero_grad()
             predictions = model(images)
@@ -57,7 +60,21 @@ def fit(model: nn.Module,
             loss.backward()
             optimizer.step()
 
-            running_loss += loss.item()
-            batches += 1
+            training_loss += loss.item()
+            training_batches += 1
 
-        print(f' training loss={running_loss / batches}')
+        print(f'loss={training_loss / training_batches}', end=' ', flush=True)
+
+        with torch.no_grad():
+            validation_batches = 0
+            validation_loss = 0
+            for images, targets, _masks in validation_loader:
+                images, targets = images.to(device), targets.to(device)
+
+                predictions = model(images)
+                loss = loss_fn(predictions, targets)
+
+                validation_loss += loss.item()
+                validation_batches += 1
+
+        print(f'val_loss={validation_loss / validation_batches}')
