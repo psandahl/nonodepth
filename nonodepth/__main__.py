@@ -1,11 +1,15 @@
 import numpy as np
 import pathlib
+import random
 import torch
 from torchvision.transforms import Resize, InterpolationMode
+from torch.utils.data import DataLoader
+
 import matplotlib.pyplot as plt
 
 from nonodepth.datasets.diode import Diode
 from nonodepth.networks.basicunet import BasicUNet
+import nonodepth.trainer as trainer
 from nonodepth.utils.image import gradients, gradient_loss, tensor_to_np_image, SSIM
 from nonodepth.utils.model import total_parameters, trainable_parameters, print_trainable_parameters
 
@@ -143,8 +147,47 @@ def model_eval() -> None:
     print(tt.shape)
 
 
-if __name__ == '__main__':
-    # path = pathlib.Path('C:\\Users\\patri\\datasets\\val')
-    # basic_visualization(path)
+def train_diode(dataset_path: pathlib.Path, model_path: pathlib.Path, size: tuple[int, int]) -> None:
+    # Set as parameters.
+    epochs = 30
+    batch_size = 16
+    learning_rate = 0.0002
 
-    model_eval()
+    # Setup datasets and dataloaders.
+    transform = Resize(
+        (384, 384), interpolation=InterpolationMode.BILINEAR, antialias=True)
+    target_transform = Resize(
+        (384, 384), interpolation=InterpolationMode.BILINEAR, antialias=True)
+
+    random.seed(1598)
+    training_dataset = Diode(root=dataset_path,
+                             split='train',
+                             transform=transform,
+                             target_transform=target_transform)
+    random.seed(1598)  # To get same initial shuffle.
+    validation_dataset = Diode(root=dataset_path,
+                               split='test',
+                               transform=transform,
+                               target_transform=target_transform)
+
+    training_loader = DataLoader(
+        training_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+    validation_loader = DataLoader(
+        validation_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
+
+    # Create model.
+    model = BasicUNet(in_channels=3)
+
+    # Run training.
+    trainer.fit(model=model,
+                training_loader=training_loader,
+                validation_loader=validation_loader,
+                epochs=epochs,
+                learning_rate=learning_rate)
+
+
+if __name__ == '__main__':
+    dataset_path = pathlib.Path('C:\\Users\\patri\\datasets\\val')
+    model_path = pathlib.Path()
+
+    train_diode(dataset_path, model_path, (384, 384))
