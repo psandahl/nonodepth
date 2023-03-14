@@ -33,17 +33,18 @@ def fit(device: torch.device,
     ssim = SSIM()
 
     def loss_fn(predictions: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        ssim_loss_weight = 1.0
-        grad_loss_weight = 0.5
+        ssim_loss_weight = 0.85
+        grad_loss_weight = 0.15
 
         ssim_loss = ssim.loss(predictions, targets)
-        # print(ssim_loss)
 
         grad_loss, _, _ = gradient_loss(
             predictions, targets)
-        # print(grad_loss)
+        # print(f' ssim_loss={ssim_loss.mean()} grad_loss={grad_loss.mean()}',
+        #      end=' ', flush=True)
 
         return ssim_loss * ssim_loss_weight + grad_loss * grad_loss_weight
+        # return ssim_loss
 
     # Run training/validation loop.
     for epoch in range(epochs):

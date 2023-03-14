@@ -80,11 +80,18 @@ class Diode(VisionDataset):
         depth_path = base / pathlib.Path(stem + '_depth.npy')
         mask_path = base / pathlib.Path(stem + '_depth_mask.npy')
 
-        depth_img = np_to_tensor_image(np.load(depth_path))
-        mask_img = np_to_tensor_image(np.load(mask_path))
+        depth_img = np.load(depth_path)
+        mask_img = np.load(mask_path)
+        mask_img = np.expand_dims(mask_img, -1)
 
-        # Use the mask image to set zeros where mask is zero.
         depth_img = depth_img * mask_img
+        mask_img_bin = mask_img > 0.
+
+        depth_img = np.log(depth_img, where=mask_img_bin)
+        depth_img = np.clip(depth_img, np.log(0.1), np.log(300))
+
+        depth_img = np_to_tensor_image(depth_img)
+        mask_img = np_to_tensor_image(mask_img)
 
         if self.target_transform is not None:
             depth_img = self.target_transform(depth_img)

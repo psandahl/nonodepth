@@ -136,6 +136,31 @@ def basic_visualization(path: pathlib.Path) -> None:
     plt.show()
 
 
+def view_validation_batch(images: torch.Tensor, targets: torch.Tensor, predictions: torch.Tensor) -> None:
+    num_samples = images.shape[0]
+
+    for i in range(num_samples):
+        image = images[i].detach()
+        target = targets[i].detach()
+        prediction = predictions[i].detach()
+
+        plt.subplot(num_samples, 3, i * 3 + 1)
+        plt.imshow(tensor_to_np_image(image))
+        plt.title('RGB Image')
+
+        plt.subplot(num_samples, 3, i * 3 + 2)
+        plt.imshow(tensor_to_np_image(target), cmap='gray',
+                   vmin=torch.min(target), vmax=torch.max(target))
+        plt.title('Target')
+
+        plt.subplot(num_samples, 3, i * 3 + 3)
+        plt.imshow(tensor_to_np_image(prediction), cmap='gray',
+                   vmin=torch.min(prediction), vmax=torch.max(prediction))
+        plt.title('Prediction')
+
+    plt.show()
+
+
 def train_diode(dataset_path: pathlib.Path,
                 model_path: pathlib.Path,
                 image_size: tuple[int, int],
@@ -187,6 +212,14 @@ def train_diode(dataset_path: pathlib.Path,
                 epochs=epochs,
                 learning_rate=learning_rate)
 
+    # Make sure model is on CPU for visualization.
+    model.to(torch.device('cpu'))
+
+    for images, targets, _masks in validation_loader:
+        predictions = model(images)
+        view_validation_batch(images, targets, predictions)
+        break
+
     return True
 
 
@@ -237,6 +270,7 @@ def main() -> bool:
 
 
 if __name__ == '__main__':
+    # basic_visualization(pathlib.Path('C:\\Users\\patri\\datasets\\val'))
     if main() == True:
         sys.exit(0)
     else:

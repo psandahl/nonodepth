@@ -103,7 +103,7 @@ class BasicUNet(nn.Module):
         self.final_conv = nn.Sequential(
             nn.Conv2d(
                 in_channels=filters[0], out_channels=1, kernel_size=1, stride=1),
-            nn.Tanh()
+            nn.ReLU()
         )
 
     def forward(self: BasicUNet, x: torch.Tensor) -> torch.Tensor:
